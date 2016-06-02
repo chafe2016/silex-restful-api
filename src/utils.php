@@ -1,11 +1,12 @@
 <?php
 
-function parseCSV($url){
-    return csvToJson(fopen($url, "r"), ";");
+function parseCSV($url, $headers, $start){
+    $csv = csvToArray(fopen($url, "r"), ";", $start);
+    return arrayToJson($csv, $headers);
 }
 
-function csvToJson($file, $delimiter) {
-    if (($handle = getFilePart($file, 2, 20)) !== FALSE) {
+function csvToArray($file, $delimiter, $start) {
+    if (($handle = getFilePart($file, $start, 20)) !== FALSE) {
         $i = 0;
         while (($lineArray = fgetcsv($handle, 4000, $delimiter, '"')) !== FALSE) {
             for ($j = 0; $j < count($lineArray); $j++) {
@@ -16,18 +17,15 @@ function csvToJson($file, $delimiter) {
         fclose($handle);
     }
     
-    return arrayToJson($arr);
+    return $arr;
 }
 
-function arrayToJson($array){
+function arrayToJson($array, $headers){
     $json_out = []; // Saída em JSON
     $document = []; // Cada elemento do JSON final
-    $json_indexes = ["SOLICITACAO","TIPO","ORGAO","DATA","HORARIO","ASSUNTO","SUBDIVISAO","DESCRICAO","LOGRADOURO_ASS",
-        "BAIRRO_ASS","REGIONAL_ASS","MEIO_RESPOSTA","OBSERVACAO","SEXO","BAIRRO_CIDADAO","REGIONAL_CIDADAO","DATA_NASC",
-        "TIPO_CIDADAO","ORGAO_RESP","RESPOSTA_FINAL"]; // Conjunto de chaves de cada documento do JSON
     foreach ($array as $line) {
         foreach ($line as $index => $cell) {
-            $document[$json_indexes[$index]] = trataCelula($cell); // Adiciona a célula do CSV à sua respectiva chave no documento
+            $document[$headers[$index]] = trataCelula($cell); // Adiciona a célula do CSV à sua respectiva chave no documento
         }
         array_push($json_out, $document); // Adiciona o documento ao JSON
     }
@@ -54,5 +52,5 @@ function getFilePart($file, $start, $end){
 }
 
 function trataCelula($string){
-    return str_replace("\n", " ", utf8_encode(trim($string)));
+    return utf8_encode(trim($string));
 }
