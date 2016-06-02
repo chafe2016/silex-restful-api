@@ -1,7 +1,11 @@
 <?php
 
-function csvToArray($file, $delimiter) {
-    if (($handle = getFilePart(fopen($file, 'r'), 20)) !== FALSE) {
+function parseCSV($url){
+    return csvToJson(fopen($url, "r"), ";");
+}
+
+function csvToJson($file, $delimiter) {
+    if (($handle = getFilePart($file, 2, 20)) !== FALSE) {
         $i = 0;
         while (($lineArray = fgetcsv($handle, 4000, $delimiter, '"')) !== FALSE) {
             for ($j = 0; $j < count($lineArray); $j++) {
@@ -11,7 +15,8 @@ function csvToArray($file, $delimiter) {
         }
         fclose($handle);
     }
-    return $arr;
+    
+    return arrayToJson($arr);
 }
 
 function arrayToJson($array){
@@ -22,7 +27,7 @@ function arrayToJson($array){
         "TIPO_CIDADAO","ORGAO_RESP","RESPOSTA_FINAL"]; // Conjunto de chaves de cada documento do JSON
     foreach ($array as $line) {
         foreach ($line as $index => $cell) {
-            $document[$json_indexes[$index]] = $cell; // Adiciona a célula do CSV à sua respectiva chave no documento
+            $document[$json_indexes[$index]] = trataCelula($cell); // Adiciona a célula do CSV à sua respectiva chave no documento
         }
         array_push($json_out, $document); // Adiciona o documento ao JSON
     }
@@ -30,13 +35,13 @@ function arrayToJson($array){
     return $json_out;
 }
 
-function getFilePart($file, $lines){
+function getFilePart($file, $start, $end){
     $new_file = tmpfile();
     if($file){
         $i = 0;
-        while ($i <= $lines) {
+        while ($i <= $end) {
             $line = fgets($file); // Pega linha por linha do CSV
-            if($i >= 2) // Ignora as 2 primeiras linhas do CSV (título e uma outra linha de lixo)
+            if($i >= $start) // Passa a pegar as linhas a partir de $start
                 fwrite($new_file, $line); // Escreve a linha para o arquivo temporário
             $i++;
         }
@@ -46,4 +51,8 @@ function getFilePart($file, $lines){
     }
     fseek($new_file, 0); // Necessário pro arquivo poder ser exportado
     return $new_file;
+}
+
+function trataCelula($string){
+    return str_replace("\n", " ", utf8_encode(trim($string)));
 }
