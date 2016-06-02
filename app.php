@@ -17,7 +17,7 @@ $app->get('/hello/{name}', function($name) use($app) {
 });
 
 $app->get('/api/dados156', function() use($app) {
-    $json = parseCSV(DADOS156);
+    $json = parseCSV(DADOS_156);
     return $app->json($json);
 });
 
