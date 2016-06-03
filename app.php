@@ -54,7 +54,8 @@ $app->get('/api/servidores_cargos_encargos', function() use($app) {
 });
 
 $app->get('/api/ua_ativas', function() use($app) {
-    return $app->abort(500, "Não foi possível converter o arquivo XLSX");
+    $json = parseCSV(DADOS_UA_ATIVAS, headers_ua_ativas(), 1);
+    return $app->json($json);
 });
 
 $app->get('/api/pretendentes', function() use($app) {

@@ -1,7 +1,25 @@
 <?php
 
 function parseCSV($url, $headers, $start){
-    $csv = csvToArray(fopen($url, "r"), ";", $start);
+    $ext = explode(".", $url);
+    if(in_array($ext[sizeof($ext) - 1], ["xlsx","xls"])){
+        $f = fopen($url, "r");
+        $tmp = tmpfile();
+        fwrite($tmp, stream_get_contents($f));
+        $reader = PHPExcel_IOFactory::createReader('Excel5');
+        $reader->setReadDataOnly(true);
+        
+        $excel = $reader->load(stream_get_meta_data($tmp)['uri']);
+        $exported = PHPExcel_IOFactory::createWriter($excel, 'CSV');
+        ob_start();
+        $exported->save('php://output');
+        $file = ob_get_clean();
+        $csv = csvToArray($file, ";", $start);
+        var_dump($csv);die;
+    }
+    else{
+        $csv = csvToArray(fopen($url, "r"), ";", $start);
+    }
     return arrayToJson($csv, $headers);
 }
 
